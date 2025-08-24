@@ -15,7 +15,9 @@ load_dotenv()
 if os.getenv("LANGCHAIN_API_KEY") and os.getenv("LANGCHAIN_PROJECT"):
     os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
     os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGCHAIN_PROJECT")
-    os.environ["LANGCHAIN_TRACKING"] = 'true'
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"  # Updated to use the correct v2 tracing variable
+    os.environ["LANGCHAIN_ENDPOINT"] = os.getenv("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
+    print("LangSmith tracing enabled with project:", os.getenv("LANGCHAIN_PROJECT"))
 
 # Set page configuration
 st.set_page_config(
@@ -144,12 +146,33 @@ def generate_response(question: str, api_key: str, model_name: str,
             model=model_name, 
             api_key=api_key,
             temperature=temperature,
-            max_tokens=max_tokens
+            max_tokens=max_tokens,
+            tags=["chatbot", model_name],  # Add tags for better organization in LangSmith
         )
         
         # Create chain and generate response
         parser = StrOutputParser()
-        chain = prompt | model | parser
+        
+        # Import LangChain tracing components
+        from langchain.callbacks.tracers import LangChainTracer
+        from langchain.callbacks.manager import CallbackManager
+        
+        # Set up tracing if LangSmith API key is present
+        if os.getenv("LANGCHAIN_API_KEY"):
+            tracer = LangChainTracer(
+                project_name=os.getenv("LANGCHAIN_PROJECT", "Groq Chatbot GenAI")
+            )
+            callback_manager = CallbackManager([tracer])
+            
+            # Create chain with tracing enabled
+            chain = (
+                prompt 
+                | model.with_config(callbacks=[tracer], tags=[f"model:{model_name}", "production"]) 
+                | parser
+            )
+        else:
+            # Create standard chain without tracing
+            chain = prompt | model | parser
         
         with st.spinner("Thinking..."):
             response = chain.invoke({'question': question})

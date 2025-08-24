@@ -5,3 +5,4 @@ langchain-groq>=0.1.0
 python-dotenv>=1.0.0
 typing-extensions>=4.8.0
 markdown>=3.5.2
+langsmith>=0.0.63  # Added for LangSmith tracing

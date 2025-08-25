@@ -4,6 +4,7 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.32.0+-red.svg)
 ![LangChain](https://img.shields.io/badge/LangChain-0.1.0+-green.svg)
 
+
 A sophisticated AI chatbot application built with Streamlit, LangChain, and Groq API. This project demonstrates how to create a modern conversational AI interface with advanced language models.
 
 ![Chatbot Demo](https://user-images.githubusercontent.com/placeholder/demo.gif)
